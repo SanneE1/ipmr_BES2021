@@ -1,3 +1,9 @@
+# rmd files
+rmd files/
+
+# powerpoint files
+*.pptx
+
 # History files
 .Rhistory
 .Rapp.history
