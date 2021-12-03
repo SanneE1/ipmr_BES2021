@@ -327,6 +327,8 @@ div.tocify {
 
 
 <p>Now we will start building an IPM using <code>ipmr</code>, so go ahead and load in the package. As mentioned in previous tutorial (02 Before you build an IPM), we assume <em>Carpobrotus</em> does not have a seedling stage (nor any other discrete stages), and will therefore be building a <em>simple</em> IPM. Moreover, we’ll also assume this species is <em>density independent</em> and we’ll stick with a <em>deterministic</em> IPM.</p>
+<div id="answers-for-previous-tutorial" class="section level1">
+<h1>Answers for previous tutorial</h1>
 <p>In the last tutorial, I asked you to fill in the Kernel and sub-kernel. If everything went according to plan, it should look a bit like this:</p>
 <ol style="list-style-type: decimal">
 <li><p><span class="math inline">\(n(z&#39;,t+1) = \int_L^U K(z&#39;,z)n(z,t)dz\)</span></p></li>
@@ -350,93 +352,127 @@ div.tocify {
 </ul></li>
 </ol>
 <p><code>ipmr</code> is designed to reflect such mathematical notation as much as possible, so writing these equations down, and understanding them, will make using <code>ipmr</code> easy!</p>
-<div id="initiate-ipmr-object" class="section level1">
-<h1>Initiate ipmr object</h1>
-<p>The first step in building an IPM with <code>ipmr</code> is to decide, and let <code>ipmr</code> know, what type of IPM we’re going to build. For this we use the <code>init_ipm()</code> function.</p>
-<div id="exercise-4" class="section level2">
-<h2>Exercise 4</h2>
-<p>Please have a look at the help page, or the <a href="https://levisc8.github.io/ipmr/articles/ipmr-introduction.html#types-of-models-in-ipmr">vignette</a> for details on the function, and decide what the values for <code>sim_gen</code>, <code>di_dd</code>, and <code>det_stoch</code> should be.</p>
-<p><strong>Complete the next function:</strong></p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">init_ipm</span>(<span class="at">sim_gen =</span> ____, <span class="at">di_dd =</span> ____, <span class="at">det_stoch =</span> ____)</span></code></pre></div>
+<p>In the hint below, you find the code to read in the data, and parametrise all the vital rates from the previous tutorial, that you will need for this tutorial. Please compare the code below with your own, and check if you selected the same models as below. If not, can you figure out why not?</p>
 <details>
 <summary>
 Hint
 </summary>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is a simple IPM, because we are just using log-transformed surface area </span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># to structure the population. </span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># There is no seed bank or seedling stage, nor is there another trait that we </span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># use to predict demographic outcomes.</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Load packages</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ipmr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="do">## load data</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>carp_df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;data/iceplant.csv&quot;</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="do">## Save coefficients of vital rates</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>s_2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(survival <span class="sc">~</span> log_size, <span class="at">data =</span> carp_df, <span class="at">family =</span> <span class="fu">binomial</span>())</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>s_pars <span class="ot">&lt;-</span> <span class="fu">coef</span>(s_2)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>g_2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(log_size_next <span class="sc">~</span> log_size, <span class="at">data =</span> carp_df)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>g_pars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">coef</span>(g_2), <span class="fu">sd</span>(<span class="fu">resid</span>(g_2)))</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>r_p_3 <span class="ot">&lt;-</span> <span class="fu">glm</span>(repro <span class="sc">~</span> log_size <span class="sc">+</span> <span class="fu">I</span>(log_size <span class="sc">^</span> <span class="dv">2</span>), <span class="at">data =</span> carp_df, <span class="at">family =</span> <span class="fu">binomial</span>())</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>r_p_pars <span class="ot">&lt;-</span> <span class="fu">coef</span>(r_p_3)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>r_n_3 <span class="ot">&lt;-</span> <span class="fu">glm</span>(flower_n <span class="sc">~</span> log_size <span class="sc">+</span> <span class="fu">I</span>(log_size <span class="sc">^</span> <span class="dv">2</span>), <span class="at">data =</span> carp_df, <span class="at">family =</span> <span class="fu">poisson</span>())</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>r_n_pars <span class="ot">&lt;-</span> <span class="fu">coef</span>(r_n_3)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>recr_data <span class="ot">&lt;-</span> <span class="fu">subset</span>(carp_df, <span class="fu">is.na</span>(log_size) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(log_size_next) <span class="sc">&amp;</span> <span class="fu">is.na</span>(flower_n_next))</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>r_d_pars  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">mean</span>(recr_data<span class="sc">$</span>log_size_next),</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sd</span>(recr_data<span class="sc">$</span>log_size_next))</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>r_g_pars  <span class="ot">&lt;-</span> <span class="fu">nrow</span>(recr_data) <span class="sc">/</span> <span class="fu">sum</span>(carp_df<span class="sc">$</span>flower_n, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 </details>
 <p><br /></p>
-<details>
-<summary>
-Hint
-</summary>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is a density-independent IPM because we do not have information on how vital rates</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># vary with population size or proximity of individuals to one another.</span></span></code></pre></div>
-</details>
-<p><br /></p>
-<details>
-<summary>
-Hint
-</summary>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is a deterministic IPM because we do not have any information on </span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># how vital rates vary as a function of the environment or time.</span></span></code></pre></div>
-</details>
-</div>
 </div>
 <div id="creating-data_lists" class="section level1">
 <h1>Creating <code>data_list</code>s</h1>
-<p><code>ipmr</code> requires all parameters in a model get passed as a list to <code>define_kernel()</code>, where names of the list components correspond to parameter names, and numeric/integer values are the parameter values. You can either create that in <code>define_kernel()</code> itself, or create an object that you then pass to the function. Experience has taught us that creating a single data list, with all the parameter values, for all sub-kernels, and passing it to all <code>define_kernel()</code> is the most readable. Moreover, it’s less likely that you forget a parameter if you create a separate list for each sub-kernel. Also, <code>ipmr</code> doesn’t mind if there’s some extra parameters in the data list!</p>
-<div id="exercise-5" class="section level2">
-<h2>Exercise 5</h2>
-<p>Create a named data list with the coefficients of <code>s</code>, <code>g</code>, <code>f_p</code> and <code>f_n</code>, as well as the mean and sd of <code>r_d</code> and the mean <code>r_g</code>. Make sure that the names you give them are clear (to you), as <code>ipmr</code> needs to be able to link these to the vital rate functions we’re going to create later on.</p>
+<p><code>ipmr</code> requires all parameters in a model get passed as a list to <code>define_kernel()</code>, where names of the list components correspond to parameter names, and numeric/integer values are the parameter values. You can either create that in <code>define_kernel()</code> itself, or create an object that you then pass to the function. Experience has taught us that creating a single data list, with all the parameter values, for all sub-kernels, and passing it to all <code>define_kernel()</code> is the most readable and less prone to mistakes. Also, <code>ipmr</code> doesn’t mind if there’s some extra parameters in the data list!</p>
+<div id="exercise-4" class="section level2">
+<h2>Exercise 4</h2>
+<p>Create a named data list with the coefficients of <code>s</code>, <code>g</code>, <code>f_p</code> and <code>f_n</code>, as well as the mean and sd of <code>r_d</code> and the mean <code>r_g</code>. Make sure that the names you give them are clear (to you), as <code>ipmr</code> uses these names to link these values to the vital rate functions we’re going to create later on.</p>
 <details>
 <summary>
 Hint
 </summary>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is just an example of names you might want to use.</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># fill in ... with your object names</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>s_par_list <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">as.list</span>(____),</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">c</span>(<span class="st">&quot;alpha_s&quot;</span>, <span class="st">&quot;beta_s&quot;</span>))</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>g_par_list <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">as.list</span>(____),</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">c</span>(<span class="st">&quot;alpha_G&quot;</span>, <span class="st">&quot;beta_G&quot;</span>, <span class="st">&quot;sigma_G&quot;</span>))</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>r_p_par_list <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">as.list</span>(____),</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">c</span>(<span class="st">&quot;alpha_r_p&quot;</span>, <span class="st">&quot;beta_r_p_1&quot;</span>, <span class="st">&quot;beta_r_p_2&quot;</span>))</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>r_n_par_list <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">as.list</span>(____),</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">c</span>(<span class="st">&quot;alpha_r_n&quot;</span>, <span class="st">&quot;beta_r_n_1&quot;</span>, <span class="st">&quot;beta_r_n_2&quot;</span>))</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>r_d_par_list <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">as.list</span>(____),</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">c</span>(<span class="st">&quot;mu_r_d&quot;</span>, <span class="st">&quot;sigma_r_d&quot;</span>))</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>r_g_par_list <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">r_g =</span> ____)</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>all_pars <span class="ot">&lt;-</span> <span class="fu">c</span>(s_par_list, g_par_list, </span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>              r_p_par_list, r_n_par_list, </span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>              r_d_par_list, r_g_par_list)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is just an example of names you might want to use.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># fill in ... with your object names</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>s_par_list <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">as.list</span>(____),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">c</span>(<span class="st">&quot;alpha_s&quot;</span>, <span class="st">&quot;beta_s&quot;</span>))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>g_par_list <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">as.list</span>(____),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">c</span>(<span class="st">&quot;alpha_G&quot;</span>, <span class="st">&quot;beta_G&quot;</span>, <span class="st">&quot;sigma_G&quot;</span>))</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>r_p_par_list <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">as.list</span>(____),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">c</span>(<span class="st">&quot;alpha_r_p&quot;</span>, <span class="st">&quot;beta_r_p_1&quot;</span>, <span class="st">&quot;beta_r_p_2&quot;</span>))</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>r_n_par_list <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">as.list</span>(____),</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">c</span>(<span class="st">&quot;alpha_r_n&quot;</span>, <span class="st">&quot;beta_r_n_1&quot;</span>, <span class="st">&quot;beta_r_n_2&quot;</span>))</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>r_d_par_list <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">as.list</span>(____),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">c</span>(<span class="st">&quot;mu_r_d&quot;</span>, <span class="st">&quot;sigma_r_d&quot;</span>))</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>r_g_par_list <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">r_g =</span> ____)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>all_pars <span class="ot">&lt;-</span> <span class="fu">c</span>(s_par_list, g_par_list, </span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>              r_p_par_list, r_n_par_list, </span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>              r_d_par_list, r_g_par_list)</span></code></pre></div>
+</details>
+</div>
+</div>
+<div id="initiate-ipmr-object" class="section level1">
+<h1>Initiate ipmr object</h1>
+<p>The first step in building an IPM with <code>ipmr</code> is to decide, and let <code>ipmr</code> know, what type of IPM we’re going to build. For this we use the <code>init_ipm()</code> function.</p>
+<div id="exercise-5" class="section level2">
+<h2>Exercise 5</h2>
+<p>Please have a look at the help page of <code>init_ipm()</code>, or the <a href="https://levisc8.github.io/ipmr/articles/ipmr-introduction.html#types-of-models-in-ipmr">vignette</a> for details on the function, and decide what the values for <code>sim_gen</code>, <code>di_dd</code>, and <code>det_stoch</code> should be.</p>
+<p><strong>Complete the next function:</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">init_ipm</span>(<span class="at">sim_gen =</span> ____, <span class="at">di_dd =</span> ____, <span class="at">det_stoch =</span> ____)</span></code></pre></div>
+<details>
+<summary>
+Hint
+</summary>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is a simple IPM, because we are just using log-transformed surface area </span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># to structure the population. </span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># There is no seed bank or seedling stage, nor is there another trait that we </span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># use to predict demographic outcomes.</span></span></code></pre></div>
+</details>
+<p><br /></p>
+<details>
+<summary>
+Hint
+</summary>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is a density-independent IPM because we do not have information on how vital rates</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># vary with population size or proximity of individuals to one another.</span></span></code></pre></div>
+</details>
+<p><br /></p>
+<details>
+<summary>
+Hint
+</summary>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is a deterministic IPM because we do not have any information on </span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># how vital rates vary as a function of the environment or time.</span></span></code></pre></div>
 </details>
 </div>
 </div>
 <div id="defining-sub-kernels" class="section level1">
 <h1>Defining sub-kernels</h1>
 <p><code>ipmr</code> defines each sub-kernel separately. That is, Equations 3 and 4 above each get their own function call, with equations 5-7 and 8-10 provided in each one. The function <code>ipmr</code> uses for this is called <code>define_kernel()</code>. It takes a sub-kernel name, a formula, vital rate expressions, a data list, and a list of states (traits). Below is the definition of the <span class="math inline">\(P(z&#39;,z)\)</span> kernel from Equation 3. Note how Equations 5-7 are translated as well.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Yes, this is the answer for ex. 4</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">init_ipm</span>(<span class="at">sim_gen =</span> <span class="st">&quot;simple&quot;</span>, <span class="at">di_dd =</span> <span class="st">&quot;di&quot;</span>, <span class="at">det_stoch =</span> <span class="st">&quot;det&quot;</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_kernel</span>(</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">name      =</span> <span class="st">&quot;P&quot;</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula   =</span> s <span class="sc">*</span> G,                          <span class="co"># Equation 3</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">s         =</span> <span class="fu">plogis</span>(alpha_s <span class="sc">+</span> beta_s <span class="sc">*</span> z_1), <span class="co"># Equation 5</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">G         =</span> <span class="fu">dnorm</span>(z_2, mu_G, sigma_G),      <span class="co"># Equation 6</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">mu_G      =</span> alpha_G <span class="sc">+</span> beta_G <span class="sc">*</span> z_1,         <span class="co"># Equation 7</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_list =</span> all_pars,</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">states    =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="st">&quot;z&quot;</span>)),</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_cor =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_fun =</span> <span class="fu">truncated_distributions</span>(<span class="at">fun =</span> <span class="st">&quot;norm&quot;</span>,</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">target =</span> <span class="st">&quot;G&quot;</span>)</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Yes, this is the answer for ex. 4</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">init_ipm</span>(<span class="at">sim_gen =</span> <span class="st">&quot;simple&quot;</span>, <span class="at">di_dd =</span> <span class="st">&quot;di&quot;</span>, <span class="at">det_stoch =</span> <span class="st">&quot;det&quot;</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_kernel</span>(</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">name      =</span> <span class="st">&quot;P&quot;</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula   =</span> s <span class="sc">*</span> G,                          <span class="co"># Equation 3</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">s         =</span> <span class="fu">plogis</span>(alpha_s <span class="sc">+</span> beta_s <span class="sc">*</span> z_1), <span class="co"># Equation 5</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">G         =</span> <span class="fu">dnorm</span>(z_2, mu_G, sigma_G),      <span class="co"># Equation 6</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">mu_G      =</span> alpha_G <span class="sc">+</span> beta_G <span class="sc">*</span> z_1,         <span class="co"># Equation 7</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_list =</span> all_pars,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">states    =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="st">&quot;z&quot;</span>)),</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_cor =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_fun =</span> <span class="fu">truncated_distributions</span>(<span class="at">fun =</span> <span class="st">&quot;norm&quot;</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">target =</span> <span class="st">&quot;G&quot;</span>)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <p>There are three things that need highlighting here:</p>
 <ol style="list-style-type: decimal">
 <li><p>We have dropped the <span class="math inline">\((z&#39;,z)\)</span>/<span class="math inline">\((z)\)</span> notation from the left hand side of our kernels/functions when translating them <code>ipmr</code> syntax.</p></li>
@@ -447,35 +483,35 @@ Hint
 <div id="exercise-6" class="section level2">
 <h2>Exercise 6</h2>
 <p><strong>Using equations 4 &amp; 8-10 fill in the code below to define <span class="math inline">\(F(z&#39;,z)\)</span> for <code>ipmr</code></strong></p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_kernel</span>(</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">name      =</span> <span class="st">&quot;F&quot;</span>,</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula   =</span> ____,</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  ____,</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># However many rows you need</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_list =</span> ____,</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">states    =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="st">&quot;z&quot;</span>)),</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_cor =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_fun =</span> <span class="fu">truncated_distributions</span>(<span class="at">fun =</span> <span class="st">&quot;norm&quot;</span>,</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">target =</span> <span class="st">&quot;r_d&quot;</span>)</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
-<details>
-<summary>
-Hint
-</summary>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_kernel</span>(</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">name      =</span> <span class="st">&quot;F&quot;</span>,</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula   =</span> ____,</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_p       =</span> <span class="fu">plogis</span>(____),</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_n       =</span> <span class="fu">exp</span>(____),</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_d       =</span> <span class="fu">dnorm</span>(____),</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_list =</span> ____,</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">states    =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="st">&quot;z&quot;</span>)),</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_cor =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_fun =</span> <span class="fu">truncated_distributions</span>(<span class="at">fun =</span> <span class="st">&quot;norm&quot;</span>,</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">target =</span> <span class="st">&quot;r_d&quot;</span>)</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  ____,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># However many rows you need</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_list =</span> ____,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">states    =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="st">&quot;z&quot;</span>)),</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_cor =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_fun =</span> <span class="fu">truncated_distributions</span>(<span class="at">fun =</span> <span class="st">&quot;norm&quot;</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">target =</span> <span class="st">&quot;r_d&quot;</span>)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<details>
+<summary>
+Hint
+</summary>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_kernel</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">name      =</span> <span class="st">&quot;F&quot;</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula   =</span> ____,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_p       =</span> <span class="fu">plogis</span>(____),</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_n       =</span> <span class="fu">exp</span>(____),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_d       =</span> <span class="fu">dnorm</span>(____),</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">data_list =</span> ____,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">states    =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="st">&quot;z&quot;</span>)),</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_cor =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">evict_fun =</span> <span class="fu">truncated_distributions</span>(<span class="at">fun =</span> <span class="st">&quot;norm&quot;</span>,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">target =</span> <span class="st">&quot;r_d&quot;</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 </details>
 <p><br /></p>
 </div>
@@ -497,35 +533,16 @@ Hint
 </ol>
 <p>2 &amp; 3 might seem unnecessary for this example - after all, we only have one state variable, <code>z</code>. However, it will make <strong>general</strong> IPMs a lot easier! For general models, the <code>state_start</code> may not always be the same as <code>state_end</code>. In the case of transitions to and from discrete states, the entries are the names of the discrete state variable.</p>
 <p>Below is an example of the <span class="math inline">\(P(z&#39;,z)\)</span> part of the <code>kernel_impl_list</code> for the model we have defined above. Notice how the <code>P</code> list is nested within another list.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>impl_arg_list <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">P =</span> <span class="fu">list</span>(</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">int_rule    =</span> <span class="st">&quot;midpoint&quot;</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">state_start =</span> <span class="st">&quot;z&quot;</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">state_end   =</span> <span class="st">&quot;z&quot;</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>impl_arg_list <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">P =</span> <span class="fu">list</span>(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">int_rule    =</span> <span class="st">&quot;midpoint&quot;</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">state_start =</span> <span class="st">&quot;z&quot;</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">state_end   =</span> <span class="st">&quot;z&quot;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <div id="exercise-7" class="section level2">
 <h2>Exercise 7:</h2>
 <p><strong>Based on the example code above and template below, try to define the <code>kernel_impl_list</code> for the <code>carpobrotus_ipm</code> object.</strong></p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_impl</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">kernel_impl_list =</span> <span class="fu">list</span>(</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">P =</span> <span class="fu">list</span>(</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">int_rule    =</span> <span class="st">&quot;midpoint&quot;</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">state_start =</span> <span class="st">&quot;z&quot;</span>,</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">state_end   =</span> <span class="st">&quot;z&quot;</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">____ =</span> <span class="fu">list</span>(</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">____ =</span> ____,</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">____ =</span> ____,</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">____ =</span> ____</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
-<details>
-<summary>
-Hint
-</summary>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_impl</span>(</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">kernel_impl_list =</span> <span class="fu">list</span>(</span>
@@ -534,13 +551,32 @@ Hint
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">state_start =</span> <span class="st">&quot;z&quot;</span>,</span>
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">state_end   =</span> <span class="st">&quot;z&quot;</span></span>
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">F =</span> <span class="fu">list</span>(</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">int_rule    =</span> ____,</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">state_start =</span> ____,</span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">state_end   =</span> ____</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">____ =</span> <span class="fu">list</span>(</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">____ =</span> ____,</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">____ =</span> ____,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">____ =</span> ____</span>
 <span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<details>
+<summary>
+Hint
+</summary>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_impl</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">kernel_impl_list =</span> <span class="fu">list</span>(</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">P =</span> <span class="fu">list</span>(</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">int_rule    =</span> <span class="st">&quot;midpoint&quot;</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">state_start =</span> <span class="st">&quot;z&quot;</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">state_end   =</span> <span class="st">&quot;z&quot;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">F =</span> <span class="fu">list</span>(</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">int_rule    =</span> ____,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">state_start =</span> ____,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">state_end   =</span> ____</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 </details>
 </div>
 </div>
@@ -558,25 +594,25 @@ Hint
 </ul></li>
 </ol>
 <p>It is fairly common practice to extract the smallest and largest values from the raw data, and then pad them by 15-20% to account for the possibility that we did not sample the smallest/largest individuals in the population. This chunk extracts those values from the <code>carp_df</code> object.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>L <span class="ot">&lt;-</span> <span class="fu">min</span>(<span class="fu">c</span>(carp_df<span class="sc">$</span>log_size, carp_df<span class="sc">$</span>log_size_next), <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">*</span> <span class="fl">1.2</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>U <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">c</span>(carp_df<span class="sc">$</span>log_size, carp_df<span class="sc">$</span>log_size_next), <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">*</span> <span class="fl">1.2</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="dv">100</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>L <span class="ot">&lt;-</span> <span class="fu">min</span>(<span class="fu">c</span>(carp_df<span class="sc">$</span>log_size, carp_df<span class="sc">$</span>log_size_next), <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">*</span> <span class="fl">1.2</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>U <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">c</span>(carp_df<span class="sc">$</span>log_size, carp_df<span class="sc">$</span>log_size_next), <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">*</span> <span class="fl">1.2</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="dv">100</span></span></code></pre></div>
 <p><strong>Note</strong>: We multiply the <code>L</code> value by 1.2 because it is negative, and we want to make it more negative (<em>i.e.</em> smaller). If it were a positive value, we would multiply it by 0.8.</p>
 <div id="exercise-8" class="section level2">
-<h2>Exercise 8</h2>
+<h2>Exercise 8:</h2>
 <p><strong>Try defining the domain for the integration for <code>carpobrotus_ipm</code> object in the code below, using the limits calculated above</strong></p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_domains</span>(</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> ___,</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">___ =</span> <span class="fu">c</span>(___, ___, ___)</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_domains</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> ___,</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">___ =</span> <span class="fu">c</span>(___, ___, ___)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <details>
 <summary>
 Hint
 </summary>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_domains</span>(</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">z =</span> <span class="fu">c</span>(___, ___, ___)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_domains</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">z =</span> <span class="fu">c</span>(___, ___, ___)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 </details>
 </div>
 </div>
@@ -589,10 +625,10 @@ Hint
 <li><p><code>pop_vectors</code>: This can be a named list of pre-defined vectors with the same format as above. This would be useful for using an observed population trait distribution as the starting point for a simulation (<code>ipmr</code> provides the function <code>discretize_pop_vector()</code> to help compute this from raw data).</p></li>
 </ol>
 <p>In this example we will use a uniform vector as the initial trait distribution</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_pop_state</span>(</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_z       =</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">/</span>m, m)</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm <span class="ot">&lt;-</span> <span class="fu">define_pop_state</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm =</span> carpobrotus_ipm,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_z       =</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">/</span>m, m)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div id="creating-the-ipm" class="section level1">
 <h1>Creating the IPM</h1>
@@ -604,14 +640,43 @@ Hint
 <li><p><code>iterations</code>: this controls the number of iterations for the deterministic simulation. The default is 50, but we can bump that up if we have problems with convergence to asymptotic dynamics.</p></li>
 </ol>
 <div id="exercise-9" class="section level2">
-<h2>Exercise 9</h2>
-<p>Use <code>make_ipm()</code> to create an IPM object for the <code>proto_ipm</code> using the initial trait distribution from above.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm_unif <span class="ot">&lt;-</span> <span class="fu">make_ipm</span>(</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm       =</span> carpobrotus_ipm,</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">return_all_envs =</span> ___,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">iterations      =</span> ___</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<h2>Exercise 9:</h2>
+<p><strong>Use <code>make_ipm()</code> to create an IPM object for the <code>proto_ipm</code> using the initial trait distribution from above.</strong></p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>carpobrotus_ipm_unif <span class="ot">&lt;-</span> <span class="fu">make_ipm</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">proto_ipm       =</span> carpobrotus_ipm,</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">return_all_envs =</span> ___,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">iterations      =</span> ___</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 </div>
+</div>
+<div id="check-for-convergence" class="section level1">
+<h1>Check for convergence</h1>
+<p>Next, we will run through some basic analyses that <code>ipmr</code> provides.</p>
+<p><code>ipmr</code> provides the <code>lambda</code> function to extract the asymptotic per-capita population growth rate (<span class="math inline">\(\lambda\)</span>). Since all values are computed via iteration, we probably want to check and make sure our simulation converged to asymptotic dynamcis before proceeding. There are two functions to help with this:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">is_conv_to_asymptotic</span>(carpobrotus_ipm_unif, <span class="at">tol =</span> <span class="fl">1e-9</span>)</span></code></pre></div>
+<pre><code>## lambda 
+##  FALSE</code></pre>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">conv_plot</span>(carpobrotus_ipm_unif, <span class="at">iterations =</span> <span class="dv">25</span><span class="sc">:</span><span class="dv">50</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" width="672" /></p>
+<p>We can see that the model has not converged to asymptotic dynamics at our requested tolerance, even though, the convergence plot looks pretty good.<br />
+Since this is a simple model and runs pretty quickly, we will re-run it with 100 iterations and then try again.</p>
+<div id="exercise-10" class="section level2">
+<h2>Exercise 10:</h2>
+<p><strong>Increase the number of iterations in <code>make_ipm()</code> to 100, and rerun the two functions above</strong></p>
+</div>
+</div>
+<div id="basic-analysis" class="section level1">
+<h1>Basic analysis</h1>
+<p>Now that we have an IPM, <em>and</em> we know it has converged to asymptotic dynamics, it’s time to get the per capita growth rate for <em>Carpobrotus</em></p>
+<div id="exercise-11" class="section level2">
+<h2>Exercise 11:</h2>
+<p><strong>Use the <code>lambda()</code> function to calculate the population growht rate for you IPM</strong></p>
+<p><code>ipmr</code> has a few more basic analysis functions for your IPM that you can find <a href="https://levisc8.github.io/ipmr/reference/index.html#section-further-analyses">here</a>.</p>
+</div>
+</div>
+<div id="wrap-up" class="section level1">
+<h1>Wrap up</h1>
+<p>That’s it! you have created and analysed your very first IPM with <code>ipmr</code>. We have gone from vital rate models to define the IPM, running, checking and analysing it. <code>ipmr</code> is capable of a lot more complex IPMs, but with this tutorial and the extensive <a href="https://levisc8.github.io/ipmr/articles/ipmr-introduction.html">vignettes</a> available, you should now be able to build whatever IPM your data needs!</p>
 </div>
 
 
