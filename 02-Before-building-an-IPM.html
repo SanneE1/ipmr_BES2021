@@ -351,8 +351,8 @@ div.tocify {
 <div id="life-cycle-diagram" class="section level1">
 <h1>Life cycle diagram</h1>
 <p>The first step of getting a model implemented with <code>ipmr</code> is to describe on paper how the life cycle works. This example assumes there is no seed bank. Thus, plants can survive (<code>s</code>) from one year to the next. If they survive, they will grow, shrink, or remain the same size (<code>g</code>). Plants have a chance of flowering (<code>r_p</code>), and if so, produce a certain number of flowers (<code>r_n</code>). On average a single flower will result in a certain number of seedlings (<code>r_g</code>, which includes seed production, germination rate, and survival until next census). These seedlings will have a size distribution of <code>r_d</code>.</p>
-<div id="htmlwidget-25e28598f4bace7cd4ed" style="width:672px;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-25e28598f4bace7cd4ed">{"x":{"diagram":"\n  digraph circles {\n  \n  graph [overlap = true, fontsize = 12]\n  \n  node [shape    = circle,\n        fontname = Helvetica,\n        nodesep  = 2.0]\n  Plants\n  \n  Plants:n -> Plants:n [label = \"Existing plants\n  P = s * g\"]\n  Plants:s -> Plants:s [label = \"F = f_p * f_n * r_g * r_d \n  New recruits\"]\n    \n  }    \n        \n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-23d056846b6b04360494" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-23d056846b6b04360494">{"x":{"diagram":"\n  digraph circles {\n  \n  graph [overlap = true, fontsize = 12]\n  \n  node [shape    = circle,\n        fontname = Helvetica,\n        nodesep  = 2.0]\n  Plants\n  \n  Plants:n -> Plants:n [label = \"Existing plants\n  P = s * g\"]\n  Plants:s -> Plants:s [label = \"F = f_p * f_n * r_g * r_d \n  New recruits\"]\n    \n  }    \n        \n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 <p><strong>Note</strong> that in our diagram, we have explicitly omitted conditioning vital rates on size <span class="math inline">\(z\)</span> and <span class="math inline">\(z&#39;\)</span>, as we have not yet explored our data and are not sure yet which ones will be functions of size.</p>
 <div id="exercise-1---lifecycle-to-kernel" class="section level2">
 <h2>Exercise 1 - Lifecycle to Kernel</h2>
@@ -438,7 +438,7 @@ Solution
 </div>
 <div id="exercise-3---size-independent-vital-rates" class="section level2">
 <h2>Exercise 3 - Size independent vital rates</h2>
-<p>A. Plot the distribution of <code>r_d</code>. Is this (close to) normally distributed? Please calculate the mean and standard deviation of the distribution and save these as well.</p>
+<p>A. Plot the distribution of <code>r_d</code>. <em>For this tutorial, it’s close enough to a normal distribution.</em> Please calculate the mean and standard deviation of the distribution and save these as well.</p>
 <details>
 <summary>
 Solution
@@ -454,7 +454,7 @@ Solution
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sd</span>(recr_data<span class="sc">$</span>log_size_next))</span></code></pre></div>
 </details>
 <p><br /></p>
-<p>D. Calculate (and store) the average number of recruits per year, based on the total number of flowers in the previous year.</p>
+<p>B. Calculate (and store) the average number of recruits per year, based on the total number of flowers in the previous year.</p>
 <details>
 <summary>
 Solution
